@@ -1,2 +1,2 @@
-My idea is from hdfs_pre_DF.py which is used  by Pandas DataFrame
-Then RDD textfile 
+My idea is from hdfs_pre_DF.py which flow is by Pandas DataFrame
+Then use RDD type by spark textfile method
