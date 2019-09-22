@@ -4,7 +4,9 @@
 
 import joblib
 load_file = open('Model Pickle file', 'rb')
+
 MRI_Model = joblib.load(load_file)
+
 load_file.close()
 
 #此時先以較簡單易懂的Random Forest測試
