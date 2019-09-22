@@ -1,17 +1,15 @@
 關於 Kafka & SparkStreaming 運用 Scikit Learn Pre-Trained Model 去預測結果的實現方法
 
-[Scikit Leran Pre-Trained Model]
-
-import joblib
-load_file = open('Model Pickle file', 'rb')
-
-MRI_Model = joblib.load(load_file)
-
-load_file.close()
-
 #此時先以較簡單易懂的Random Forest測試
 #以spark的broadcast來將模型作為變數
+#Scikit Leran Pre-Trained Model
+import joblib
+load_file = open('Model Pickle file', 'rb')
+MRI_Model = joblib.load(load_file)
+load_file.close()
 rfr_bc = sc.broadcast(MRI_Model)
+
+
 
 
 
