@@ -22,7 +22,9 @@ rfr_bc = sc.broadcast(MRI_Model)
 
 [邏輯思維過程]
 
-A.由 Spark 框架配合 Pandas DataFrame概念實現(hdfs_pre＿DF.py):
+A.hdfs_pre＿DF.py : 
+
+由 Spark 框架配合 Pandas DataFrame概念實現:
 
 (1) API pyhdfs import CSV file
 
@@ -34,32 +36,48 @@ A.由 Spark 框架配合 Pandas DataFrame概念實現(hdfs_pre＿DF.py):
 
 (5) predictd by pre-trained model
 
-DF本身就是物件,資料越大 Read&ETL會越花費時間  直到predict才轉換成RDD,等於沒有運用spark的優勢 故此方法效率慢
+DF本身就是物件,資料越大 Read&ETL會越花費時間 inference轉換成RDD,等於沒有運用spark的優勢 故此方法效率慢
 
 
 B.hdfs_pre.py:
+
 Sparkcontent&Textfile transfer to RDD at first
+
 整個過程都在RDD的作動下完成故效率更快
 
 
-C.由第二支程式了解到Spark map/reduce的邏輯推演後,開始進入SparkStreaming (Dstreams)的情境中
-SparkStreaming.py:
+C.SparkStreaming.py:
+
+由第二支程式了解到Spark map/reduce的邏輯推演後,開始進入SparkStreaming (Dstreams)的情境中
+
 以 "nc -lk 9999" 先設定輸入端口（port 9999必須不佔用)
+
 以socketTextStream將端口資料帶入 轉換成Dstreams
+
 之後為map/reduce邏輯推演 將模型變數代入 得到結果
 
 
 D.PysparkStreaming_Kafka.py:
-配合Kafka(Topic & Producer & Consumer)協作
-因為SparkStreaming API "KafkaUtils.createStream" 協同作用
-資料能即時進入topic後以Dstreams來作動 
-透過map/reduce邏輯推演 將模型變數代入 得到結果
 
-[完成品]
+配合Kafka(Topic & Producer & Consumer)協作
+
+因為SparkStreaming API "KafkaUtils.createStream" 
+
+資料能即時進入topic後以Dstreams來作動 
+
+透過程式邏輯推演,資料清理
+將模型變數代入 得到結果
+
+[Result]
+
 Streaming_xgb.py
-以xgboosting建模(相對更準確,MAPE~15%)
+
+以xgboosting建模(相對更準確,MAPE<20%)
+
 方法如同(D)
-結果再透過ROM sqlalchemy和pyhdfs將資料儲存至DB(SQL＆HDFS)
+
+結果再透過 ROM sqlalchemy 和 API pyhdfs 儲存至DB(SQL＆HDFS)
+
 '''
 def put_sqlalchemy(p):
     #conn=mysql.connector.connect(database='DB102',host='10.120.14.110',user='root',password = 'Qqqq@123')
@@ -74,9 +92,11 @@ def put_sqlalchemy(p):
 def savetohdfs(d):
     for i in d:
         client.append("/user/cloudera/model_deploy/output/utime.csv","{},{}\n".format(str(i[0]),str(i[1])))
+
 '''     
 也將資料傳回kafka Topic以便日後使用
 '''
+
 def output_kafka(partition):
 # Create producer
     producer = KafkaProducer(bootstrap_servers=broker_list)
