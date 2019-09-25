@@ -78,12 +78,12 @@ Streaming_xgb.py
 
 結果再透過 ROM sqlalchemy 和 API pyhdfs 儲存至DB(SQL＆HDFS)
 
-'''
+
 def put_sqlalchemy(p):
 
     #conn=mysql.connector.connect(DBinfo)
 
-    engine = create_engine('mysql+mysqlconnector://root:Qqqq@123@10.120.14.110:3306/DB102')
+    engine = create_engine('mysql+mysqlconnector:DBinfo')
 
     for i in p:
         t = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
