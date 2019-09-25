@@ -80,8 +80,11 @@ Streaming_xgb.py
 
 '''
 def put_sqlalchemy(p):
-    #conn=mysql.connector.connect(database='DB102',host='10.120.14.110',user='root',password = 'Qqqq@123')
+
+    #conn=mysql.connector.connect(DBinfo)
+
     engine = create_engine('mysql+mysqlconnector://root:Qqqq@123@10.120.14.110:3306/DB102')
+
     for i in p:
         t = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         d = {'PNO': [i[0]], 'PRETIME': [i[1]],'Time':t }
@@ -89,7 +92,9 @@ def put_sqlalchemy(p):
         df.to_sql('result',con=engine,if_exists='append',index=False)
         
         
+
 def savetohdfs(d):
+
     for i in d:
         client.append("/user/cloudera/model_deploy/output/utime.csv","{},{}\n".format(str(i[0]),str(i[1])))
 
