@@ -23,11 +23,17 @@ rfr_bc = sc.broadcast(MRI_Model)
 [邏輯思維過程]
 
 A.由 Spark 框架配合 Pandas DataFrame概念實現(hdfs_pre＿DF.py):
+
 (1) API pyhdfs import CSV file
+
 (2)make Pd Data Frame 
+
 (3) DF ETL 
+
 (4) DF transfering to RDD 
+
 (5) predictd by pre-trained model
+
 DF本身就是物件,資料越大 Read&ETL會越花費時間  直到predict才轉換成RDD,等於沒有運用spark的優勢 故此方法效率慢
 
 
