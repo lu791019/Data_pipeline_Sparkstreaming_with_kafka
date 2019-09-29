@@ -23,6 +23,7 @@ import pyspark
 import mysql.connector
 import datetime
 
+
 def savetohdfs(d):
     for i in d:
         client.append("/user/cloudera/model_deploy/output/utime.csv","{},{}\n".format(str(i[0]),str(i[1])))
@@ -37,26 +38,34 @@ def output_kafka(partition):
         producer.send(topic, value=bytes(message, "utf8"))
     producer.close()
 
-
 def output_rdd(rdd):
     rdd.foreachPartition(output_kafka)
 
 
 def rdd_stats(rdd):
-    if(rdd.count() == 0):
-        return rdd
 
-    input_df = rdd.map(lambda arr: Row(PNO=arr[0],usetime=arr[1])).toDF()
+    input_df = rdd.map(lambda line: line.split(","))\
+              .map(lambda arr: Row(PNO=arr[0],usetime=arr[1]))
+               #.toDF()
+    
+    #input_df.createOrReplaceTempView('input_df')
 
-    data_filter = input_df.select(input_df["PNO"],input_df["usetime"])
-    return data_filter.rdd
+    return input_df
+#.map(lambda x : Row(x))        
+
+def send_JDBC(p):
+    url = "jdbc:mysql://10.120.14.110:3306"
+    connection = createNewConnection("jdbc:mysql://10.120.14.110:3306/sparkt?useSSL=false","root","Qqqq@123")
+     #conncection = DriverManager.getConnection("jdbc:mysql://10.120.14.110:3306/sparkt?useSSL=false","root","Qqqq@123")
+    for i in p:
+        connection.send(i)
+    connection.close()
 
 
 def put_JDBC(p):
-    for i in p:
-        i.write.option("driver", "com.mysql.jdbc.Driver") \
-					 .jdbc("jdbc:mysql://10.120.14.110:3306", "DB102.sparkt",\
-					  properties={"user": "root", "password": "Qqqq@123"})
+    url = "jdbc:mysql://10.120.14.110:3306"
+    p.write.jdbc(url=url,table='sparkt',mode='append',preperties={'user':'root','password':'Qqqq@123',\
+                      'driver':'com.mysql.jdbc.Driver'})
 
 def put_sqlalchemy(p):
     #conn=mysql.connector.connect(database='DB102',host='10.120.14.110',user='root',password = 'Qqqq@123')
@@ -75,20 +84,20 @@ def put_sqlalchemy(p):
 if __name__ == "__main__":
 
 
-    client = pyhdfs.HdfsClient(hosts="10.120.14.120,9000",user_name="cloudera")
+    client = pyhdfs.HdfsClient(hosts="140.115.236.155,9000",user_name="cloudera")
 
     #ser producer for topic "utime"
     topic = "utime"
-    broker_list = '10.120.14.120:9092,10.120.14.120:9093'
+    broker_list = '140.115.236.155:9092,140.115.236.155:9093'
     
     spark = SparkSession \
         .builder \
         .getOrCreate()
     
     sc = spark.sparkContext
-    ssc = StreamingContext(sc, 5)
+    ssc = StreamingContext(sc, 3)
     #ser consumer kafkastream take from topic  Pdata
-    lines = KafkaUtils.createStream(ssc, "10.120.14.120:2182", "Pdata_for_model", {"Pdata": 3})
+    lines = KafkaUtils.createStream(ssc, "140.115.236.155:2182", "Pdata_for_model", {"Pdata": 3})
 
 
 
@@ -99,7 +108,7 @@ if __name__ == "__main__":
     rfr_bc = sc.broadcast(MRI_Model)
 
     #p = lines.map(lambda x:x[0])
-       
+    data = lines.map(lambda x: x[1])   
     r0 = lines.map(lambda x:(x[0],x[1]))
     r1 = lines.map(lambda x: (x[0],[float(x[1].split(",")[0]),float(x[1].split(",")[1]),float(x[1].split(",")[2]),float(x[1].split(",")[3]),\
                               float(x[1].split(",")[4]),float(x[1].split(",")[5]),float(x[1].split(",")[6])]))
@@ -108,26 +117,33 @@ if __name__ == "__main__":
 
     r4 = r3.map(lambda x: (x[0],int(rfr_bc.value.predict(x[1]))))
      
-    r5 = r4.map(lambda x :(x[0],x[1]//60))
+    result = r4.map(lambda x :(x[0],x[1]//60))
     
+  
+ 
     
-    #result = p.union(t)
-    
+    result.persist(pyspark.StorageLevel.MEMORY_AND_DISK)
     
 
     #for sparkSQL
     #result.transform
-    #action:save or export
+    #action:save or export        
+    
+    df_stream = data.transform(rdd_stats)
 
-    r5.persist(pyspark.StorageLevel.MEMORY_AND_DISK)
-        
-    r5.pprint()
-    r6 = r5.transform(rdd_stats)
     
-    r5.foreachRDD(lambda rdd: rdd.foreachPartition(put_sqlalchemy))
-    
-    #r5.foreachRDD(output_rdd)
-    #r5.foreachRDD(lambda rdd: rdd.foreachPartition(savetohdfs))
+    #data.foreachRDD(lambda rdd: rdd.foreachPartition(send_JDBC))
+
+    #df_stream.write.option("driver", "com.mysql.jdbc.Driver") \
+                        #.jdbc("jdbc:mysql://10.120.14.110:3306", "DB102.sparkt",\
+                         #properties={"user": "root", "password": "Qqqq@123"})
+    #df_stream.foreachRDD(put_JDBC)
+
+
+    result.foreachRDD(lambda rdd: rdd.foreachPartition(put_sqlalchemy))
+    result.foreachRDD(output_rdd)
+    result.foreachRDD(lambda rdd: rdd.foreachPartition(savetohdfs))
+    result.pprint()
     # Start it
     ssc.start()
     ssc.awaitTermination()
