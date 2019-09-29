@@ -1,6 +1,6 @@
 # 關於 Kafka & SparkStreaming 運用 Scikit Learn Pre-Trained Model 去預測結果的實現方法
 
-## 以較簡單的Random Forest測試
+## 以較簡單的Random Forest測試 (Result則改以 XGB 其MAPE <20%)
 
 ## 以spark的broadcast來將模型作為變數
 
@@ -17,9 +17,9 @@
 
 
 
-## 程式邏輯過程
+## 程式邏輯過程 (初次將spark應用於實務, 整個步驟由spark框架 逐漸改良優化 spark streaming&Kafka)
 
-## A.hdfs_pre＿DF.py : 
+## A.hdfs_pre＿DF.py
 
 由 Spark 框架配合 Pandas DataFrame概念實現:
 
@@ -43,7 +43,7 @@ Sparkcontent&Textfile transfer to RDD at first
 整個過程都在RDD的作動下完成故效率更快
 
 
-## C.SparkStreaming.py:
+## C.SparkStreaming.py
 
 由第二支程式了解到Spark map/reduce的邏輯推演後,開始進入SparkStreaming (Dstreams)的情境中
 
@@ -54,7 +54,7 @@ Sparkcontent&Textfile transfer to RDD at first
 之後為map/reduce邏輯推演 將模型變數代入 得到結果
 
 
-## D.PysparkStreaming_Kafka.py:
+## D.PysparkStreaming_Kafka.py
 
 配合Kafka(2 Topics includint Pdata & utime)協作
 
