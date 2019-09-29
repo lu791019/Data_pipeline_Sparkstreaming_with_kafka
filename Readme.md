@@ -1,5 +1,9 @@
 # 關於 Kafka & SparkStreaming 運用 Scikit Learn Pre-Trained Model 去預測結果的實現方法
 
+# [成果驗收] 病患資料能透過Spark Streaming以及Kafka 配合Scikit-Learn Pre-trained Model 得到預測使用儀器時間的結果
+
+# [On-going] 正在嘗試將data streaming (i) 已 JDBC 存至SQL  (ii)以sparksql df的形式存至metastore 以便後續利用
+
 ## 以較簡單的Random Forest測試 (Result則改以 XGB 其MAPE <20%)
 
 ## 以spark的broadcast來將模型作為變數
