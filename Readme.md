@@ -1,10 +1,10 @@
-關於 Kafka & SparkStreaming 運用 Scikit Learn Pre-Trained Model 去預測結果的實現方法
+# 關於 Kafka & SparkStreaming 運用 Scikit Learn Pre-Trained Model 去預測結果的實現方法
 
-#此時先以較簡單易懂的Random Forest測試
+## 以較簡單的Random Forest測試
 
-#以spark的broadcast來將模型作為變數
+## 以spark的broadcast來將模型作為變數
 
-#Scikit Leran Pre-Trained Model
+### Scikit Leran Pre-Trained Model
 
 import joblib
 
@@ -20,9 +20,9 @@ rfr_bc = sc.broadcast(MRI_Model)
 
 
 
-[邏輯思維過程]
+## 邏輯思維過程
 
-A.hdfs_pre＿DF.py : 
+## A.hdfs_pre＿DF.py : 
 
 由 Spark 框架配合 Pandas DataFrame概念實現:
 
@@ -30,23 +30,23 @@ A.hdfs_pre＿DF.py :
 
 (2)make Pd Data Frame 
 
-(3) DF ETL 
+(3) DataFrame ETL 
 
-(4) DF transfering to RDD 
+(4) DateFrame transfering to RDD 
 
-(5) predictd by pre-trained model
+(5) Inferenced by pre-trained model
 
 DF本身就是物件,資料越大 Read&ETL會越花費時間 inference轉換成RDD,等於沒有運用spark的優勢 故此方法效率慢
 
 
-B.hdfs_pre.py:
+## B.hdfs_pre.py
 
 Sparkcontent&Textfile transfer to RDD at first
 
 整個過程都在RDD的作動下完成故效率更快
 
 
-C.SparkStreaming.py:
+## C.SparkStreaming.py:
 
 由第二支程式了解到Spark map/reduce的邏輯推演後,開始進入SparkStreaming (Dstreams)的情境中
 
@@ -57,9 +57,9 @@ C.SparkStreaming.py:
 之後為map/reduce邏輯推演 將模型變數代入 得到結果
 
 
-D.PysparkStreaming_Kafka.py:
+## D.PysparkStreaming_Kafka.py:
 
-配合Kafka(Topic & Producer & Consumer)協作
+配合Kafka(2 Topics includint Pdata & utime)協作
 
 因為SparkStreaming API "KafkaUtils.createStream" 
 
@@ -68,9 +68,9 @@ D.PysparkStreaming_Kafka.py:
 透過程式邏輯推演,資料清理
 將模型變數代入 得到結果
 
-[Result]
+## Result
 
-Streaming_xgb.py
+## Streaming_xgb.py
 
 以xgboosting建模(相對更準確,MAPE<20%)
 
@@ -79,7 +79,7 @@ Streaming_xgb.py
 結果再透過 ROM sqlalchemy 和 API pyhdfs 儲存至DB(SQL＆HDFS)
 
 
-def put_sqlalchemy(p):
+## def put_sqlalchemy(p):
 
     #conn=mysql.connector.connect(DBinfo)
 
@@ -90,10 +90,9 @@ def put_sqlalchemy(p):
         d = {'PNO': [i[0]], 'PRETIME': [i[1]],'Time':t }
         df = pd.DataFrame(data=d)
         df.to_sql('result',con=engine,if_exists='append',index=False)
-        
-        
+                
 
-def savetohdfs(d):
+## def savetohdfs(d):
 
     for i in d:
         client.append("/user/cloudera/model_deploy/output/utime.csv","{},{}\n".format(str(i[0]),str(i[1])))
@@ -103,20 +102,20 @@ def savetohdfs(d):
 '''
 
 def output_kafka(partition):
-# Create producer
+## Create producer
     producer = KafkaProducer(bootstrap_servers=broker_list)
-# Get each (word,count) pair and send it to the topic by iterating the partition (an Iterable object)
+## Get each (word,count) pair and send it to the topic by iterating the partition (an Iterable object)
     for i in partition:
         message = "The Patient NO. is {}, need {} minutes to detect by MRI".format(str(i[0]),str(i[1]))
         producer.send(topic, value=bytes(message, "utf8"))
     producer.close()
 
 
-def output_rdd(rdd):
+## def output_rdd(rdd):
     rdd.foreachPartition(output_kafka)
 '''
 
-*Dstreams Action (foreachRDD)配合foreachPartition 使資料傳輸更流暢
+## Dstreams Action (foreachRDD)配合foreachPartition 使資料傳輸更流暢
 
 
 
