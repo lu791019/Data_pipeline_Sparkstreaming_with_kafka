@@ -71,10 +71,46 @@ Sparkcontent&Textfile transfer to RDD at first
 
 以xgboosting建模(相對更準確,MAPE<20%)
 
-方法如同(D)
+
+    client = pyhdfs.HdfsClient(hosts="IP & Port",user_name="username")
+
+    #ser producer for topic "utime"
+    topic = "utime"
+    broker_list = 'Kafka broker IP & Port'
+    
+    spark = SparkSession \
+        .builder \
+        .getOrCreate()
+    
+    sc = spark.sparkContext
+    ssc = StreamingContext(sc, 3)
+    #ser consumer kafkastream take from topic  Pdata
+    lines = KafkaUtils.createStream(ssc, "Kafka Topic IP & Port ", "Topic name", {"Topic name": "partition counts"})
+
+
+
+
+    load_file = open("pre-treained model - pima_20190911_xgb.pickle in predict_model Folder", 'rb')
+    MRI_Model = joblib.load(load_file)
+    load_file.close()
+    rfr_bc = sc.broadcast(MRI_Model)
+
+    #p = lines.map(lambda x:x[0])
+    data = lines.map(lambda x: x[1])   
+    r0 = lines.map(lambda x:(x[0],x[1]))
+    r1 = lines.map(lambda x: (x[0],[float(x[1].split(",")[0]),float(x[1].split(",")[1]),float(x[1].split(",")[2]),\
+                              float(x[1].split(",")[3]),float(x[1].split(",")[4]),\
+                              float(x[1].split(",")[5]),float(x[1].split(",")[6])]))
+    r2 = r1.map(lambda x: (x[0],np.array(x[1],dtype=int)))
+    r3 = r2.map(lambda x: (x[0],x[1].reshape(1,-1)))
+
+    r4 = r3.map(lambda x: (x[0],int(rfr_bc.value.predict(x[1]))))
+     
+    result = r4.map(lambda x :(x[0],x[1]//60))
+        
+    result.persist(pyspark.StorageLevel.MEMORY_AND_DISK)
 
 結果再透過 ROM sqlalchemy 和 API pyhdfs 儲存至DB(SQL＆HDFS)
-
 
 ## def put_sqlalchemy(p):
 
@@ -95,7 +131,7 @@ Sparkcontent&Textfile transfer to RDD at first
         client.append("/user/cloudera/model_deploy/output/utime.csv","{},{}\n".format(str(i[0]),str(i[1])))
 
 '''     
-也將資料傳回kafka Topic以便日後使用
+將資料傳回kafka Topic以便日後使用
 '''
 
 def output_kafka(partition):
