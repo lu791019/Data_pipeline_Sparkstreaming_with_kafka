@@ -5,22 +5,19 @@
 ## 以spark的broadcast來將模型作為變數
 
 ### Scikit Leran Pre-Trained Model
+         import joblib
 
-import joblib
+         load_file = open('Model Pickle file', 'rb')
 
-load_file = open('Model Pickle file', 'rb')
+          MRI_Model = joblib.load(load_file)
 
-MRI_Model = joblib.load(load_file)
+          load_file.close()
 
-load_file.close()
-
-rfr_bc = sc.broadcast(MRI_Model)
-
+          rfr_bc = sc.broadcast(MRI_Model)
 
 
 
-
-## 邏輯思維過程
+## 程式邏輯過程
 
 ## A.hdfs_pre＿DF.py : 
 
